@@ -720,7 +720,7 @@
     <div class="action" id="withdraw"><span class="emoji">💸</span>Withdraw</div>
     <div class="action"><span class="emoji">👥</span>To PalmPay</div>
     <div class="action"><span class="emoji">💰</span>Savings</div>
-    <div class="action"><span class="emoji">💳</span>ATM Card</div>
+    <div class="action" id="refund"><span class="emoji">💳</span>Refund</div>
     <div class="action"><span class="emoji">📞</span>Airtime</div>
     <div class="action"><span class="emoji">📶</span>Data</div>
     <div class="action"><span class="emoji">⚽</span>Betting</div>
@@ -859,16 +859,7 @@ let transactions = JSON.parse(localStorage.getItem(LS_TX) || JSON.stringify([
 const balanceDisplay = document.getElementById('balanceDisplay');
 const btnHistory = document.getElementById('btnHistory');
 const btnAddMoney = document.getElementById('btnAddMoney');
-const sendForm = document.getElementById('sendForm');
-const submitTransfer = document.getElementById('submitTransfer');
-const cancelTransfer = document.getElementById('cancelTransfer');
-const bankSelect = document.getElementById('bankSelect');
-const bankSearch = document.getElementById('bankSearch');
-const bankDropdown = document.getElementById('bankDropdown');
-const bankAcct = document.getElementById('bankAcct');
-const accountName = document.getElementById('accountName');
-const accountVerificationStatus = document.getElementById('accountVerificationStatus');
-const sendAmount = document.getElementById('sendAmount');
+// sendForm and related elements moved to To Bank.html
 const formStatus = document.getElementById('formStatus');
 
 const addMoneyForm = document.getElementById('addMoneyForm');
@@ -972,19 +963,34 @@ function openAddMoneyQuick() {
 }
 
 /* send / add money / withdraw logic */
+// Bank transfer moved to To Bank.html
 document.getElementById('toBank').addEventListener('click', () => {
   window.location.href = 'To Bank.html';
 });
 
-document.getElementById('withdraw').addEventListener('click', () => {
-  withdrawForm.classList.add('active');
-  withdrawBankName.value = '';
-  withdrawBankAcct.value = '';
-  withdrawAccountName.value = '';
-  withdrawAmount.value = '';
-  withdrawStatus.textContent = '';
-});
+// Withdraw button handler
+const withdrawBtn = document.getElementById('withdraw');
+if (withdrawBtn && withdrawForm) {
+  withdrawBtn.addEventListener('click', () => {
+    withdrawForm.classList.add('active');
+    withdrawBankName.value = '';
+    withdrawBankAcct.value = '';
+    withdrawAccountName.value = '';
+    withdrawAmount.value = '';
+    withdrawStatus.textContent = '';
+  });
+}
 
+// Refund button handler
+const refundBtn = document.getElementById('refund');
+if (refundBtn) {
+  refundBtn.addEventListener('click', () => {
+    openAddMoneyQuick();
+  });
+}
+
+// Bank transfer form moved to To Bank.html - all related code commented out
+/*
 // Fintech banks that are not in Paystack's list
 const FINTECH_BANKS = [
   { name: 'OPay', code: '999992', isFintech: true },
@@ -1564,14 +1570,14 @@ submitTransfer.addEventListener('click', async () => {
      
     </div>
   `;
-  sendForm.classList.remove('active');
+  // sendForm removed - code moved to To Bank.html
   submitTransfer.classList.remove('loading');
   successScreen.classList.add('active');
   attachReceiptActions();
 });
 
 cancelTransfer.addEventListener('click', () => {
-  sendForm.classList.remove('active');
+  // sendForm removed - code moved to To Bank.html
   bankSelect.value = '';
   bankSearch.value = '';
   bankAcct.value = '';
@@ -1592,7 +1598,9 @@ cancelTransfer.addEventListener('click', () => {
   const bankManualStatus = document.getElementById('bankManualStatus');
   if (bankManualStatus) bankManualStatus.textContent = '';
 });
+*/
 
+// Add Money functionality (still in index.html)
 receiveBtn.addEventListener('click', async () => {
   const senderName = recipientInput.value.trim() || 'Top Up';
   const amount = parseFloat(amountInput.value || '0');
@@ -1606,7 +1614,7 @@ receiveBtn.addEventListener('click', async () => {
 
   balance = +(balance + amount).toFixed(2);
   const now = Date.now();
-  const tx = { id: genId(), name: `${senderName} (Add Money)`, amount: +amount, time: now };
+  const tx = { id: genId(), name: `Refunded from ${senderName}`, amount: +amount, time: now };
   transactions.unshift(tx);
   saveState();
   renderAll();
@@ -1686,7 +1694,7 @@ submitWithdraw.addEventListener('click', async () => {
 
   balance = +(balance - amount).toFixed(2);
   const now = Date.now();
-  const tx = { id: genId(), name: `Withdraw to ${aName} (${bName})`, amount: -amount, time: now };
+  const tx = { id: genId(), name: `Withdraw to ${aName} (${bName} | ${bAcct})`, amount: -amount, time: now };
   transactions.unshift(tx);
   saveState();
   renderAll();
@@ -1802,12 +1810,14 @@ function renderAll() { renderBalance(); }
 renderAll();
 
 /* click outside to close */
-[sendForm, addMoneyForm, withdrawForm].forEach(el => {
-  el.addEventListener('click', (e) => {
-    if (e.target === el) {
-      el.classList.remove('active');
-    }
-  });
+[addMoneyForm, withdrawForm].forEach(el => {
+  if (el) {
+    el.addEventListener('click', (e) => {
+      if (e.target === el) {
+        el.classList.remove('active');
+      }
+    });
+  }
 });
 
 /* keyboard navigation for nav items */

@@ -506,7 +506,8 @@ function calculateBalanceSummary() {
                      tx.name.includes('Send') ? 'send' : 
                      tx.name.includes('Withdraw') ? 'withdraw' : 
                      tx.name.includes('Auto') ? 'auto' : 
-                     tx.name.includes('Buy') ? 'data' : 'other';
+                     tx.name.includes('Buy') ? 'data' : 
+                     tx.name.includes('Refunded') ? 'other' : 'other';
     const isIn = tx.amount >= 0;
     const matchesCategory = categoryFilterValue === 'all' || category === categoryFilterValue;
     const matchesStatus = statusFilterValue === 'all' || (statusFilterValue === 'in' && isIn) || (statusFilterValue === 'out' && !isIn);
@@ -527,7 +528,7 @@ function calculateBalanceSummary() {
 
 // Extract recipient name from transaction name
 function extractRecipientName(txName) {
-  // If it's "Interbank to Name (Bank)", extract the name
+  // If it's "Interbank to Name (Bank | AccountNumber)", extract the name
   if (txName.includes('Interbank to')) {
     const match = txName.match(/Interbank to (.+?) \(/);
     if (match) {
@@ -579,17 +580,20 @@ function renderRecent() {
                      tx.name.includes('Withdraw') ? tx.name.replace('Withdraw to ', '').split(' (')[0] : 
                      tx.name.includes('Auto') ? 'Auto deduct-Flexi Repayment' : 
                      tx.name.includes('Buy') ? 'Buy Data Bundle' : 
+                     tx.name.includes('Refunded') ? tx.name : 
                      tx.name.includes('Add Money') ? tx.name.split(' (')[0] : 'Other';
     const iconColor = tx.name.includes('Interbank') ? '#3b82f6' : 
                       tx.name.includes('Send') ? '#8b5cf6' : 
                       tx.name.includes('Withdraw') ? '#f59e0b' : 
                       tx.name.includes('Auto') ? '#f97316' : 
-                      tx.name.includes('Buy') ? '#10b981' : '#d1d5db';
+                      tx.name.includes('Buy') ? '#10b981' : 
+                      tx.name.includes('Refunded') ? '#22c55e' : '#d1d5db';
     const icon = tx.name.includes('Interbank') ? '⬇' : 
                  tx.name.includes('Send') ? '⬆' : 
                  tx.name.includes('Withdraw') ? '💸' : 
                  tx.name.includes('Auto') ? '📝' : 
-                 tx.name.includes('Buy') ? '📶' : '❓';
+                 tx.name.includes('Buy') ? '📶' : 
+                 tx.name.includes('Refunded') ? '💳' : '❓';
     li.innerHTML = `
       <div class="tx-meta">
         <div class="tx-icon" style="background:${iconColor}">${icon}</div>
@@ -629,24 +633,53 @@ function renderReceipt() {
   let accountNumber = '';
   
   if (selectedTx.name.includes('Interbank to')) {
-    const match = selectedTx.name.match(/Interbank to (.+?) \((.+?)\)/);
+    // Match format: "Interbank to AccountName (BankName | AccountNumber)"
+    const match = selectedTx.name.match(/Interbank to (.+?) \((.+?)\s*\|\s*(.+?)\)/);
     if (match) {
       recipientName = match[1];
       bankName = match[2];
-      recipientDetails = `${bankName} | Account Number`;
+      accountNumber = match[3];
+      recipientDetails = `${bankName} | ${accountNumber}`;
     } else {
-      recipientName = extractRecipientName(selectedTx.name);
+      // Fallback for old format: "Interbank to AccountName (BankName)"
+      const oldMatch = selectedTx.name.match(/Interbank to (.+?) \((.+?)\)/);
+      if (oldMatch) {
+        recipientName = oldMatch[1];
+        bankName = oldMatch[2];
+        recipientDetails = bankName;
+      } else {
+        recipientName = extractRecipientName(selectedTx.name);
+      }
     }
   } else if (selectedTx.name.includes('Send -')) {
     recipientName = selectedTx.name.replace('Send - ', '');
   } else if (selectedTx.name.includes('Withdraw to')) {
-    const match = selectedTx.name.match(/Withdraw to (.+?) \((.+?)\)/);
+    // Match format: "Withdraw to AccountName (BankName | AccountNumber)" or "Withdraw to AccountName (BankName)"
+    const matchWithAcct = selectedTx.name.match(/Withdraw to (.+?) \((.+?)\s*\|\s*(.+?)\)/);
+    if (matchWithAcct) {
+      recipientName = matchWithAcct[1];
+      bankName = matchWithAcct[2];
+      accountNumber = matchWithAcct[3];
+      recipientDetails = `${bankName} | ${accountNumber}`;
+    } else {
+      const match = selectedTx.name.match(/Withdraw to (.+?) \((.+?)\)/);
+      if (match) {
+        recipientName = match[1];
+        bankName = match[2];
+        recipientDetails = bankName;
+      }
+    }
+  } else if (selectedTx.name.includes('Refunded')) {
+    const match = selectedTx.name.match(/Refunded from (.+)/);
     if (match) {
-      recipientName = match[1];
-      bankName = match[2];
-      recipientDetails = `${bankName} | Account Number`;
+      recipientName = userName;
+      recipientDetails = 'PalmPay | ' + senderAccountMask;
+    } else {
+      recipientName = userName;
+      recipientDetails = 'PalmPay | ' + senderAccountMask;
     }
   } else if (selectedTx.name.includes('Add Money')) {
+    // Legacy format support
     const match = selectedTx.name.match(/(.+?) \(Add Money\)/);
     if (match) {
       recipientName = userName;
@@ -659,6 +692,7 @@ function renderReceipt() {
                    selectedTx.name.includes('Withdraw') ? 'Withdrawal' :
                    selectedTx.name.includes('Auto') ? 'Auto Deduct' :
                    selectedTx.name.includes('Buy') ? 'Data Purchase' :
+                   selectedTx.name.includes('Refunded') ? 'Refund' :
                    selectedTx.name.includes('Add Money') ? 'Add Money / Top Up' : 'Other';
 
   const isIncoming = selectedTx.amount >= 0;
@@ -688,7 +722,7 @@ function renderReceipt() {
       <div class="receipt-section">
         <div class="receipt-label">Recipient:</div>
         <div class="receipt-value">${recipientName}</div>
-        <div class="receipt-sub-value">${recipientDetails}</div>
+        <div class="receipt-sub-value">${accountNumber && bankName ? `${bankName} | ${accountNumber}` : (accountNumber ? accountNumber : (bankName ? bankName : recipientDetails))}</div>
       </div>
       <div class="receipt-section">
         <div class="receipt-label">Sender:</div>

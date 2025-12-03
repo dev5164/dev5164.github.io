@@ -13,6 +13,10 @@
     --purple-2: #5b21b6;
     --card: #111217;
     --accent: #ffd166;
+    --select-bg: #0b0b0c;
+    --select-border: rgba(255,255,255,0.1);
+    --tx-bg: #1a1a1f;
+    --dropdown-shadow: 0 8px 24px rgba(0,0,0,0.5);
   }
   [data-theme="light"] {
     --bg: #f5f5f7;
@@ -108,6 +112,13 @@
   [data-theme="light"] {
     --form-bg: rgba(255, 255, 255, 0.95);
     --form-border: rgba(0,0,0,0.1);
+    --input-bg: #ffffff;
+    --input-border: rgba(0,0,0,0.1);
+    --select-bg: #ffffff;
+    --select-border: rgba(0,0,0,0.15);
+    --receipt-bg: #ffffff;
+    --tx-bg: #f5f5f7;
+    --dropdown-shadow: 0 8px 24px rgba(0,0,0,0.15);
   }
   input[type="text"], input[type="number"] { 
     width: 100%; 
@@ -119,10 +130,6 @@
     color: var(--text-color, #fff); 
     font-size: 14px; 
     transition: background 0.3s ease, color 0.3s ease, border 0.3s ease;
-  }
-  [data-theme="light"] {
-    --input-bg: #ffffff;
-    --input-border: rgba(0,0,0,0.1);
   }
   input:focus {
     outline: none;
@@ -204,11 +211,16 @@
     transition: color 0.3s ease;
   }
   .receipt-container { 
-    background: var(--receipt-bg, #0c0c0f); 
+    background: var(--receipt-bg, var(--card, #0c0c0f)); 
     padding: 16px; 
     border-radius: 12px; 
     margin: 16px; 
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    border: 1px solid var(--form-border, rgba(255,255,255,0.05));
+    transition: background 0.3s ease, border 0.3s ease;
+  }
+  [data-theme="light"] .receipt-container {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   }
   .receipt-logo { 
     text-align: center; 
@@ -242,6 +254,7 @@
     margin: 16px 0; 
     padding: 12px 0; 
     border-top: 1px solid var(--form-border, rgba(255,255,255,0.05)); 
+    transition: border-color 0.3s ease;
   }
   .receipt-label { 
     font-size: 12px; 
@@ -264,6 +277,7 @@
     justify-content: space-between;
     padding: 8px 0;
     border-bottom: 1px solid var(--form-border, rgba(255,255,255,0.05));
+    transition: border-color 0.3s ease;
   }
   .receipt-info-label {
     font-size: 12px;
@@ -282,12 +296,15 @@
     margin-top: 16px;
     padding-top: 16px;
     border-top: 1px solid var(--form-border, rgba(255,255,255,0.05));
+    transition: border-color 0.3s ease, color 0.3s ease;
   }
   .receipt-actions {
     display: flex;
     gap: 8px;
     padding: 16px;
     border-top: 1px solid var(--form-border, rgba(255,255,255,0.05));
+    background: var(--bg);
+    transition: border-color 0.3s ease, background 0.3s ease;
   }
   .receipt-action-btn {
     flex: 1;
@@ -314,8 +331,11 @@
     <div class="header-title">Transfer To Bank</div>
     <div class="icons">
       <div class="icon-btn" id="themeToggle" title="Toggle theme">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-          <path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+        <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" style="transition: transform 0.3s ease;">
+          <!-- Sun icon (shown in dark mode) -->
+          <path id="sunIcon" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" style="display: block;"/>
+          <!-- Moon icon (shown in light mode) -->
+          <path id="moonIcon" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" style="display: none;"/>
         </svg>
       </div>
     </div>
@@ -324,9 +344,9 @@
   <!-- Transfer Form -->
   <div class="form-card">
     <div style="position:relative;margin-bottom:8px;">
-      <input type="text" id="bankSearch" placeholder="Search Bank or Type Bank Name Manually (e.g., OPay, Kuda, Access, UBA, WEMA)" autocomplete="off" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--select-border, rgba(255,255,255,0.02));background:var(--select-bg, #0b0b0c);color:var(--text-color, #fff);font-size:14px;">
-      <div id="bankDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;max-height:300px;overflow-y:auto;background:var(--select-bg, #0b0b0c);border:1px solid var(--select-border, rgba(255,255,255,0.1));border-radius:6px;margin-top:4px;z-index:10000;box-shadow:0 8px 24px rgba(0,0,0,0.5);"></div>
-      <div id="bankManualStatus" style="font-size:11px;margin-top:4px;color:var(--muted);min-height:14px;"></div>
+      <input type="text" id="bankSearch" placeholder="Search Bank or Type Bank Name Manually (e.g., OPay, Kuda, Access, UBA, WEMA)" autocomplete="off" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--select-border, rgba(255,255,255,0.02));background:var(--select-bg, #0b0b0c);color:var(--text-color, #fff);font-size:14px;transition:background 0.3s ease, border 0.3s ease, color 0.3s ease;">
+      <div id="bankDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;max-height:300px;overflow-y:auto;background:var(--select-bg, #0b0b0c);border:1px solid var(--select-border, rgba(255,255,255,0.1));border-radius:6px;margin-top:4px;z-index:10000;box-shadow:var(--dropdown-shadow, 0 8px 24px rgba(0,0,0,0.5));transition:background 0.3s ease, border 0.3s ease, box-shadow 0.3s ease;"></div>
+      <div id="bankManualStatus" style="font-size:11px;margin-top:4px;color:var(--muted);min-height:14px;transition:color 0.3s ease;"></div>
     </div>
     <input type="hidden" id="bankSelect" value="">
     <input type="text" id="bankAcct" placeholder="Bank Account Number (10 digits)" required maxlength="10" pattern="[0-9]{10}">
@@ -414,12 +434,31 @@ const themeToggle = document.getElementById('themeToggle');
 const currentTheme = localStorage.getItem(LS_THEME) || 'dark';
 document.documentElement.setAttribute('data-theme', currentTheme);
 
+// Update theme icon based on current theme
+function updateThemeIcon() {
+  const currentTheme = document.documentElement.getAttribute('data-theme');
+  const sunIcon = document.getElementById('sunIcon');
+  const moonIcon = document.getElementById('moonIcon');
+  
+  if (currentTheme === 'light') {
+    if (sunIcon) sunIcon.style.display = 'none';
+    if (moonIcon) moonIcon.style.display = 'block';
+  } else {
+    if (sunIcon) sunIcon.style.display = 'block';
+    if (moonIcon) moonIcon.style.display = 'none';
+  }
+}
+
 themeToggle.addEventListener('click', () => {
   const currentTheme = document.documentElement.getAttribute('data-theme');
   const newTheme = currentTheme === 'light' ? 'dark' : 'light';
   document.documentElement.setAttribute('data-theme', newTheme);
   localStorage.setItem(LS_THEME, newTheme);
+  updateThemeIcon();
 });
+
+// Initialize theme icon on page load
+updateThemeIcon();
 
 // Fintech banks that are not in Paystack's list
 const FINTECH_BANKS = [
@@ -430,6 +469,7 @@ const FINTECH_BANKS = [
   { name: 'UBA Bank', code: '50201', isFintech: true },
   { name: 'ACCESS Bank', code: '50291', isFintech: true },
   { name: 'WEMA Bank', code: '50202', isFintech: true },
+  { name: 'FIRST BANK', code: '59202', isFintech: true },
   { name: 'Carbon', code: '50457', isFintech: true }
 ];
 
@@ -544,9 +584,9 @@ function renderBankDropdown() {
   
   if (!filteredBanksList || filteredBanksList.length === 0) {
     if (banksList.length === 0) {
-      bankDropdown.innerHTML = '<div style="padding:12px;text-align:center;color:var(--muted);font-size:12px;">Loading banks...</div>';
+      bankDropdown.innerHTML = '<div style="padding:12px;text-align:center;color:var(--muted);font-size:12px;transition:color 0.3s ease;">Loading banks...</div>';
     } else {
-      bankDropdown.innerHTML = '<div style="padding:12px;text-align:center;color:var(--muted);font-size:12px;">No banks found. Try a different search.</div>';
+      bankDropdown.innerHTML = '<div style="padding:12px;text-align:center;color:var(--muted);font-size:12px;transition:color 0.3s ease;">No banks found. Try a different search.</div>';
     }
     bankDropdown.style.display = 'block';
     return;
@@ -554,7 +594,7 @@ function renderBankDropdown() {
 
   filteredBanksList.forEach(bank => {
     const bankItem = document.createElement('div');
-    bankItem.style.cssText = 'padding:10px 12px;cursor:pointer;border-bottom:1px solid var(--select-border, rgba(255,255,255,0.05));transition:background 0.2s;';
+    bankItem.style.cssText = 'padding:10px 12px;cursor:pointer;border-bottom:1px solid var(--select-border, rgba(255,255,255,0.05));transition:background 0.2s ease, border-color 0.3s ease;';
     
     const fintechBadge = bank.isFintech 
       ? '<span style="background:#3b82f6;color:#fff;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:600;margin-left:6px;">Fintech</span>' 
@@ -563,8 +603,8 @@ function renderBankDropdown() {
     bankItem.innerHTML = `
       <div style="display:flex;align-items:center;justify-content:space-between;">
         <div style="flex:1;">
-          <div style="font-weight:600;font-size:14px;color:var(--text-color, #fff);display:flex;align-items:center;">${bank.name}${fintechBadge}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px;">Code: ${bank.code}</div>
+          <div style="font-weight:600;font-size:14px;color:var(--text-color, #fff);display:flex;align-items:center;transition:color 0.3s ease;">${bank.name}${fintechBadge}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;transition:color 0.3s ease;">Code: ${bank.code}</div>
         </div>
       </div>
     `;
@@ -694,7 +734,7 @@ if (bankSearch) {
     if (banksList.length > 0) {
       filterBanks(bankSearch.value);
     } else {
-      bankDropdown.innerHTML = '<div style="padding:12px;text-align:center;color:var(--muted);font-size:12px;">Loading banks... Please wait.</div>';
+      bankDropdown.innerHTML = '<div style="padding:12px;text-align:center;color:var(--muted);font-size:12px;transition:color 0.3s ease;">Loading banks... Please wait.</div>';
       bankDropdown.style.display = 'block';
     }
   });
@@ -911,7 +951,7 @@ submitTransfer.addEventListener('click', async () => {
 
   balance = +(balance - amount).toFixed(2);
   const now = Date.now();
-  const tx = { id: genId(), name: `Interbank to ${aName} (${bName})`, amount: -amount, time: now };
+  const tx = { id: genId(), name: `Interbank to ${aName} (${bName} | ${bAcct})`, amount: -amount, time: now };
   transactions.unshift(tx);
   saveState();
 
