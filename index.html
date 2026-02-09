@@ -823,7 +823,7 @@
             <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.4" id="eyeInner" opacity="0.5"/>
           </svg>
         </span></div>
-        <div class="balance-value" id="balanceDisplay">₦556,489.00</div>
+        <div class="balance-value" id="balanceDisplay">₦56,489.00</div>
       </div>
       <div class="balance-actions">
         <button class="add-money" id="btnAddMoney">Receive Money ▸</button>
@@ -972,7 +972,7 @@ const LS_PROFILE_PIC = 'demo_profile_pic';
 const LS_THEME = 'demo_theme';
 
 /* default data */
-let balance = parseFloat(localStorage.getItem(LS_BAL) || '556489.00');
+let balance = parseFloat(localStorage.getItem(LS_BAL) || '56489.00');
 let transactions = JSON.parse(localStorage.getItem(LS_TX) || JSON.stringify([
   {id: genId(), name: "Interbank Transfer", amount: 290.00, time: new Date('2025-07-30T19:13:00').getTime()},
   {id: genId(), name: "Send - ABDULSALAM ADEDAYO TIAMIYU", amount: -400.00, time: new Date('2025-07-30T18:38:00').getTime()},
@@ -1058,8 +1058,8 @@ themeToggle.addEventListener('click', toggleTheme);
 initTheme();
 
 let showBalance = true;
-const userName = 'Tiamiyu Abdulsalam';
-const senderAccountMask = '904***9211';
+const userName = 'Godwin Samuel';
+const senderAccountMask = '902***9856';
 
 /* helpers */
 function genId() { return Math.random().toString(36).slice(2, 14); }
